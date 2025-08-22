@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Aziz'in Dijital Geçidi</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #1e1e2f;
+      color: #fff;
+      padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+    input, button, select {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+    input {
+      background: #2e2e3e;
+      color: #fff;
+    }
+    button {
+      background: #4caf50;
+      color: #fff;
+      cursor: pointer;
+    }
+    .menu {
+      display: none;
+      margin-top: 20px;
+    }
+    #securityNote {
+      background: #292940;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-left: 5px solid #00c8ff;
+      max-width: 400px;
+    }
+    a.fakeMail {
+      color: #00c8ff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    .favBtn {
+      background: #ff9800;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Giriş Menüsü -->
+  <h2>🔐 Giriş Yap</h2>
+  <div id="securityNote">🔒 Copilot Güvenlik Katmanı™ aktif</div>
+  <div id="loginMenu">
+    <input type="email" id="gmailInput" placeholder="Gmail adresiniz">
+    <input type="text" id="nameInput" placeholder="Adınız">
+    <input type="password" id="gmailPassword" placeholder="Şifre">
+    <button onclick="sendFakeMail()">Giriş Yap</button>
+  </div>
+
+  <!-- Mail Simülasyonu -->
+  <div id="mailSentMenu" class="menu">
+    <h3>📩 Doğrulama maili gönderildi!</h3>
+    <p>Mail kutunuza gelen bağlantıya tıklayın:</p>
+    <a class="fakeMail" onclick="verifyMail()">👉 Doğrula</a>
+  </div>
+
+  <!-- Arama Menüsü -->
+  <div id="searchMenu" class="menu">
+    <h3>🔍 Arama Menüsü</h3>
+    <input type="text" id="searchInput" placeholder="Site adı veya URL">
+    <button onclick="searchSite()">Git</button>
+    <button onclick="toggleSettings()">⚙️ Ayarlar</button>
+    <button onclick="toggleHistory()">📜 Geçmiş</button>
+    <button onclick="toggleFavorites()">⭐ Favoriler</button>
+  </div>
+
+  <!-- Ayarlar Menüsü -->
+  <div id="settingsMenu" class="menu">
+    <h3>🎨 Tema Seçimi</h3>
+    <select onchange="changeTheme(this.value)">
+      <option value="dark">Koyu Tema</option>
+      <option value="light">Açık Tema</option>
+      <option value="retro">Retro Tema</option>
+    </select>
+  </div>
+
+  <!-- Arama Geçmişi -->
+  <div id="historyMenu" class="menu">
+    <h3>📜 Arama Geçmişi</h3>
+    <ul id="historyList"></ul>
+  </div>
+
+  <!-- Favori Siteler -->
+  <div id="favoritesMenu" class="menu">
+    <h3>⭐ Favori Siteler</h3>
+    <ul id="favoritesList"></ul>
+  </div>
+
+  <script>
+    let history = JSON.parse(localStorage.getItem("searchHistory")) || [];
+    let favorites = JSON.parse(localStorage.getItem("favoriteSites")) || [];
+
+    function sendFakeMail() {
+      const email = document.getElementById("gmailInput").value.trim();
+      const name = document.getElementById("nameInput").value.trim();
+      const pass = document.getElementById("gmailPassword").value.trim();
+
+      const regex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+      if (!regex.test(email)) {
+        alert("❌ Geçersiz Gmail adresi!");
+        return;
+      }
+      if (name.length < 2) {
+        alert("❌ İsim çok kısa!");
+        return;
+      }
+      if (pass.length < 6 || !/[0-9]/.test(pass) || !/[a-zA-Z]/.test(pass)) {
+        alert("❌ Şifre zayıf!");
+        return;
+      }
+
+      localStorage.setItem("userLoggedIn", "true");
+      document.getElementById("loginMenu").style.display = "none";
+      document.getElementById("mailSentMenu").style.display = "block";
+    }
+
+    function verifyMail() {
+      document.getElementById("mailSentMenu").style.display = "none";
+      document.getElementById("searchMenu").style.display = "block";
+      updateHistory();
+      updateFavorites();
+    }
+
+    function searchSite() {
+      let input = document.getElementById("searchInput").value.trim();
+      if (!input) {
+        alert("Lütfen bir site adı veya URL girin.");
+        return;
+      }
+      let url = input.startsWith("http") ? input : "https://www." + input + ".com";
+      window.open(url, "_blank");
+
+      history.push(url);
+      localStorage.setItem("searchHistory", JSON.stringify(history));
+      updateHistory();
+      addFavoriteButton(url);
+    }
+
+    function toggleSettings() {
+      toggleMenu("settingsMenu");
+    }
+
+    function toggleHistory() {
+      toggleMenu("historyMenu");
+    }
+
+    function toggleFavorites() {
+      toggleMenu("favoritesMenu");
+    }
+
+    function toggleMenu(id) {
+      const menu = document.getElementById(id);
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+
+    function changeTheme(theme) {
+      if (theme === "dark") {
+        document.body.style.background = "#1e1e2f";
+        document.body.style.color = "#fff";
+      } else if (theme === "light") {
+        document.body.style.background = "#f0f0f0";
+        document.body.style.color = "#000";
+      } else if (theme === "retro") {
+        document.body.style.background = "#ffefd5";
+        document.body.style.color = "#333";
+      }
+    }
+
+    function updateHistory() {
+      const list = document.getElementById("historyList");
+      list.innerHTML = "";
+      history.forEach(url => {
+        const li = document.createElement("li");
+        li.textContent = url;
+        list.appendChild(li);
+      });
+    }
+
+    function addFavoriteButton(url) {
+      if (favorites.includes(url)) return;
+
+      const list = document.getElementById("favoritesList");
+      const li = document.createElement("li");
+      li.textContent = url;
+      const btn = document.createElement("button");
+      btn.textContent = "Favori Ekle";
+      btn.className = "favBtn";
+      btn.onclick = () => {
+        favorites.push(url);
+        localStorage.setItem("favoriteSites", JSON.stringify(favorites));
+        updateFavorites();
+        btn.disabled = true;
+        btn.textContent = "Eklendi";
+      };
+      li.appendChild(btn);
+      list.appendChild(li);
+    }
+
+    function updateFavorites() {
+      const list = document.getElementById("favoritesList");
+      list.innerHTML = "";
+      favorites.forEach(url => {
+        const li = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = url;
+        link.textContent = url;
+        link.target = "_blank";
+        link.style.color = "#00c8ff";
+        li.appendChild(link);
+        list.appendChild(li);
+      });
+    }
+  </script>
+
+</body>
+</html>
